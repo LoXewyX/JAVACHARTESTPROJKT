@@ -8,15 +8,25 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Toolkit;
-import java.awt.event.*;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-public class Panel {
+
+public class Panel  {
 	
 	public static int num;
 	public int page = 0, pagemax = 1;
@@ -25,16 +35,16 @@ public class Panel {
 	
 	String ipBlock = null;
 	private String[] txt = new String[List.txt.length];
-	private final String password = "password";
+	private final String password = "admin";
 	private final int waitTime = 120;
 	@SuppressWarnings("unused") private int realSec = 0;
-	private int attempts = 3, min, sec, newsec, h,
+	private int attempts = 3, min, sec, newsec, hour,
 		newRealSec = 0, oldSec = 0, newoldSec;
-	private String timer, reg, revtimer;
+	private String timer, reg, revtimer, captureTime;
     private long timeFlow = System.currentTimeMillis();
-	
 	private boolean isAdmin = false, devArgs = false,
 			colorFrame = false, isBlocked = false;
+	
 	private JFrame jf = new JFrame();
 	private JPanel jp_text = new JPanel(),
 		jp_buttons = new JPanel(),
@@ -120,7 +130,7 @@ public class Panel {
 		jp_password.add(jtf_pass);
 		jp_password.add(bpass);
 		
-		jlab_dev_args.setBounds(550, 0, 150, 100);
+		jlab_dev_args.setBounds(550, 200, 150, 100);
 		jlab_dev_args.setVisible(true);
 		
 		jlpane.add(jp_text);
@@ -129,15 +139,16 @@ public class Panel {
 		jlpane.add(jp_number, 1, 0);
 		jlpane.add(jp_password, 1, 0);
 		jlpane.add(jlab_dev_args, 2, 0);
-		
+			
 		pageUpdate();
 		loop();
+			
+		
 		
 	}
 
 	private void testWindow(int num) {
         
-        // start program
         Menu m = new Menu();
         m.start(num);
 		
@@ -172,7 +183,6 @@ public class Panel {
 				public void actionPerformed(ActionEvent e) {
 					
 					num = Integer.parseInt(e.getActionCommand());
-//					sf.msg(num);
 					testWindow(num);
 					
 				}
@@ -182,12 +192,18 @@ public class Panel {
 		
 	}
 	
+	private void buttonProps(JButton jb) {
+		
+		jb.setBackground(Color.WHITE);
+		jb.setForeground(Color.BLACK);
+		jb.setFocusable(false);
+		
+	}
+	
 	private void bNext() {
 		
 		buttonBack = new JButton("Back");
-		buttonBack.setBackground(Color.WHITE);
-		buttonBack.setForeground(Color.BLACK);
-		buttonBack.setFocusable(false);
+		buttonProps(buttonBack);
 		buttonBack.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				
@@ -198,9 +214,7 @@ public class Panel {
 		});
 		
 		buttonNext = new JButton("Next");
-		buttonNext.setBackground(Color.WHITE);
-		buttonNext.setForeground(Color.BLACK);
-		buttonNext.setFocusable(false);
+		buttonProps(buttonNext);
 		buttonNext.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				
@@ -211,8 +225,7 @@ public class Panel {
 		});
 		
 		bpass = new JButton("Check");
-		bpass.setBackground(Color.WHITE);
-		bpass.setForeground(Color.BLACK);
+		buttonProps(bpass);
 		bpass.addActionListener(checkPassword());
 		
 	}
@@ -241,7 +254,6 @@ public class Panel {
 		
 		if(isAdmin) {
 			
-			if(reg != null)	sf.msg(reg);
 			bpass.setText("Exit");
 			jtf_pass.setEnabled(false);
 			jtf_pass.setText(null);
@@ -314,6 +326,14 @@ public class Panel {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				
+				if (e.getKeyCode() == KeyEvent.VK_F1) {
+					
+					if(isBlocked)
+						isBlocked = false;
+					update();
+					
+				}
+				
 				if (e.getKeyCode() == KeyEvent.VK_F3) {
 					
 					if(colorFrame)
@@ -328,26 +348,18 @@ public class Panel {
 				
 				if (e.getKeyCode() == KeyEvent.VK_F4) {
 					
-					if(devArgs)
+					if(devArgs) {
+						
 						devArgs = false;
-						
-					else
-						devArgs = true;
-					update();
-					
-				}
-				
-				if (e.getKeyCode() == KeyEvent.VK_F12) {
-					
-					if(jp_password.isVisible()) {
-						
-						isAdmin = false;
 						jp_password.setVisible(false);
-						
 					} else {
 						
+						devArgs = true;
 						jp_password.setVisible(true);
+						
 					}
+						
+					
 					
 				}
 				
@@ -416,26 +428,22 @@ public class Panel {
 						
 					} else {
 						
-						URL ipRead;
-						BufferedReader br;
-						try {
+						if(--attempts <= 0) {
 							
-							ipRead = new URL("http://checkip.amazonaws.com");
-							br = new BufferedReader(
-									new InputStreamReader(
-											ipRead.openStream()
-					                )
-							);
-							ipBlock = br.readLine();
+							ipBlock = sf.getUserIP();
+							captureTime = sf.getTime();
+							reg = "Don\'t panic this is only a test\n"
+							+ "Nothing from here is gathered\n"
+							+ "Last activity at " + captureTime
+							+ "\nUp time captured: " + timer
+							+ "\nNet IP: " + ipBlock;
 							
-						} catch (Exception e2) {}
-						
-						reg = "Last attempted to access was at\n" + timer
-							+ "With the password \n\""+ s + "\"\n"
-							+ "IP: " + ipBlock;
-						attempts -= 1;
-						if(attempts <= 0)
 							isBlocked = true;
+							sf.createFolder(sf.desktopRoute(), "logs");
+							sf.createTXT(sf.desktopRoute() + "\\logs", "activity", reg);
+							sf.openFile(sf.desktopRoute() + "\\logs\\activity.txt");
+							
+						}
 						else
 							sf.msgError("Password does not match! You have " +
 									attempts + " attempts left");
@@ -449,7 +457,7 @@ public class Panel {
 		
 	}
 	
-	private void loop() {
+	private void loop() throws StackOverflowError {
 		
 		try {
 			
@@ -457,46 +465,48 @@ public class Panel {
 				
 				jlab_dev_args.setText("<html>"
 						+ "Up time: " + timer
+						+ "<br/>(F1) Reset penalty time"
 						+ "<br/>(F3) colorFrame = " + colorFrame
 						+ "<br/>(F4) devArgs"
-						+ "<br/>(F12) isAdmin = " + isAdmin
+						+ "<br/>isAdmin = " + isAdmin
 						+ "<br/>isBlocked = " + isBlocked
 						+ "</html>");
 			} else
 				jlab_dev_args.setText(null);
 			
-		} catch(Exception e) {}
-		
-		try {
+			TimeUnit.MILLISECONDS.sleep(100);
+				
 			
-			TimeUnit.MILLISECONDS.sleep(10);
+			sec = (int)((System.currentTimeMillis() - timeFlow) / 1000);
+			if(oldSec != sec) realSec++;
+			oldSec = sec;
 			
-		} catch (InterruptedException e) {}
-		
-		sec = (int)((System.currentTimeMillis() - timeFlow) / 1000);
-		if(oldSec != sec) realSec++;
-		oldSec = sec;
-		
-		if (sec == 60) {
+			if (sec == 60) {
+				
+				if(sec % 60 == 0) min++;
+			    sec = 0;
+			    timeFlow = System.currentTimeMillis();
+			    
+			}
 			
-			if(sec % 60 == 0) min++;
-		    sec = 0;
-		    timeFlow = System.currentTimeMillis();
-		    
-		}
-		
-		if(min == 60) {
+			if(min == 60) {
+				
+				if(min % 60 == 0) hour++;
+				sec = 0;
+				
+			}
+	
+			try {
+				
+				timer = String.format("%02d:%02d:%02d", hour, min, sec);
+				
+			} catch (Exception e) {}
 			
-			if(min % 60 == 0) h++;
-			sec = 0;
+			if(isBlocked) bannedTime();
 			
-		}
-
-		timer = String.format("%02d:%02d:%02d\n", h, min, sec);
-		
-		if(isBlocked) bannedTime();
-		
-		loop();
+			loop();
+			
+		} catch (InterruptedException e1) {}
 		
 	}
 	

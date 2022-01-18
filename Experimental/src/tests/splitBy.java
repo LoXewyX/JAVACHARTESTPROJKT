@@ -6,7 +6,7 @@ import visual.Panel;
 
 public class splitBy {
 	
-	private static Simplify sf = new Simplify();
+	private  Simplify sf = new Simplify();
 	
 	public splitBy() {
 		
@@ -20,10 +20,10 @@ public class splitBy {
 		String s, srange;
 		
 		try {
-			s = sf.msginput("\nIntroduce your number sequence: ", List.txt[Panel.num]);
+			s = sf.msgInput("\nIntroduce your number sequence: ", List.txt[Panel.num]);
 			if(!s.equals(null)) {
 				
-				 srange = sf.msginput("\nIntroduce your split range: ", List.txt[Panel.num]);
+				 srange = sf.msgInput("\nIntroduce your split range: ", List.txt[Panel.num]);
 				if(!srange.equals(null)) {
 					
 					try {
@@ -31,7 +31,7 @@ public class splitBy {
 						i = Integer.parseInt(s);
 						range = Integer.parseInt(srange);
 						
-						String[] array = sf.split(String.valueOf(i), range);
+						String[] array = sf.stringSplit(String.valueOf(i), range);
 						
 				        char c;
 				        String sr = "";

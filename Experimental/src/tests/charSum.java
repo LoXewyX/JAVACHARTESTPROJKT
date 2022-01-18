@@ -12,7 +12,7 @@ public class charSum {
 		
 		try {
 			
-			String s = sf.msginput("Introduce your text: ", List.txt[Panel.num]);
+			String s = sf.msgInput("Introduce your text: ", List.txt[Panel.num]);
 			int i = 0;
 			
 	        char[] ch = new char[s.length()];

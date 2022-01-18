@@ -6,10 +6,11 @@ public class List {
 			
 			"Type num to char",
 			"Type char to num",
-			"List all chars (lim up to 512)",
-			"Split text to char in numbers every X",
+			"List all chars",
+			"Split num to char every X",
 			"Text to chars separated",
-			"Sum of all chars typed"
+			"Sum of all chars typed",
+			"Generate random char"
 			
 	};
 	

@@ -35,6 +35,10 @@ public class Menu {
 			case 5: 
 				new charSum(); 
 				break;
+				
+			case 6: 
+				new randChar(); 
+				break;
 		
 		}
 		

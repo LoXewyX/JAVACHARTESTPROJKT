@@ -23,7 +23,7 @@ public class byTypingNum {
 		
 		try {
 			
-			do s = sf.msginput("Introduce your number", List.txt[Panel.num]);
+			do s = sf.msgInput("Introduce your number", List.txt[Panel.num]);
 			while (s.length() == 0);
 			
 			if(!sf.isNumeric(s)) {

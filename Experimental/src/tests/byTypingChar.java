@@ -21,7 +21,7 @@ public class byTypingChar {
 		
 		try {
 			
-			do s = sf.msginput("Introduce your character", List.txt[Panel.num]);
+			do s = sf.msgInput("Introduce your character", List.txt[Panel.num]);
 			while (s.length() == 0);
 			
 			c = s.charAt(0);
