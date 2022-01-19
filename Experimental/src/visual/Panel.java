@@ -71,19 +71,26 @@ public class Panel  {
 		bpass;
 	private JLabel jlab_title = new JLabel(),
 		jlab_page = new JLabel("Page " + String.valueOf(page) + " / " + pagemax),
-		jlab_dev_args = new JLabel(),
-		jlab_dev = new JLabel("<html>by " + creator + "<br/>2022 - "+ sf.getTimeByPattern("YYYY") + "</html>");
+		jlab_dev_args = new JLabel("<html>"
+				+ "[F1] Reset to default"
+				+ "<br/>[F2] Reset penalty time"
+				+ "<br/>[F3] Colorise frames"
+				+ "<br/>[F4] Developer arguments"
+				+ "</html>"),
+		jlab_dev_args_ext = new JLabel(), 
+		jlab_dev = new JLabel("<html>by " + creator + "<br/>2022 - "+ sf.getTimeByPattern("YYYY") + "</html>"),
+		jlab_shadow = new JLabel("<html>"
+				+ "[F1] Reset to default"
+				+ "<br/>[F2] Reset penalty time"
+				+ "<br/>[F3] Colorise frames"
+				+ "<br/>[F4] Developer arguments"
+				+ "</html>"),
+		jlab_shadow_ext = new JLabel();
 	private JTextField jtf_pass = new JTextField(null, 18);
 	
-	public Panel() {
+	public void start() {
 		
 		currentVersion = "v" + sf.readFile(sf.projectLocation() + "\\src\\files\\version", "");
-		txt = List.txt;
-		
-		
-	}
-	
-	public void start() {
 		
 		jf.addKeyListener(keyListen());
 		jtf_pass.addActionListener(checkPassword());
@@ -119,6 +126,7 @@ public class Panel  {
 	    jlab_title.setText("Examples with char");
 	    
 		jp_text.setBounds(0, 50, 750, 50);
+		jp_text.setFont(jp_text.getFont().deriveFont(64.0f));
 		jp_text.setVisible(true);
 		jp_text.add(jlab_title);
 		
@@ -148,19 +156,28 @@ public class Panel  {
 		jp_password.add(jtf_pass);
 		jp_password.add(bpass);
 		
-		jlab_dev_args.setSize(150, 115);
-		jlab_dev_args.setVisible(true);
+		jlab_dev_args.setBounds(10, 10, 150, 75);
 		
-		jlab_dev.setBounds(650, 390, 150, 100);
-		jlab_dev.setVisible(true);
+		jlab_dev_args_ext.setBounds(600, 10, 150, 75);
+		
+		jlab_dev.setBounds(650, 390, 150, 75);
+		
+		jlab_shadow.setBounds(11, 11, 150, 75);
+		jlab_shadow.setForeground(null);
+		
+		jlab_shadow_ext.setBounds(601, 11, 150, 75);
+		jlab_shadow_ext.setForeground(null);
 		
 		jlpane.add(jp_text);
 		jlpane.add(jp_buttons);
 		jlpane.add(jp_nxt);
 		jlpane.add(jp_number, 1, 0);
 		jlpane.add(jp_password, 1, 0);
-		jlpane.add(jlab_dev_args, 2, 0);
-		jlpane.add(jlab_dev, 2, 0);
+		jlpane.add(jlab_dev_args, 3, 0);
+		jlpane.add(jlab_dev_args_ext, 3, 0);
+		jlpane.add(jlab_dev, 3, 0);
+		jlpane.add(jlab_shadow, 2, 0);
+		jlpane.add(jlab_shadow_ext, 2, 0);
 			
 		pageUpdate();
 		loop();
@@ -194,6 +211,8 @@ public class Panel  {
     }
 	
 	private void bMenu() {
+		
+		this.txt = List.txt;
 		
 		for (int i = 0; i < txt.length; i++) {
 			button[i] = new JButton(txt[i]);
@@ -261,7 +280,10 @@ public class Panel  {
 			jp_number.setBackground(Color.ORANGE);
 			jp_password.setBackground(Color.ORANGE);
 			
-			jlab_dev_args.setForeground(new Color(128, 128, 128));
+			jlab_dev_args.setForeground(Color.ORANGE);
+			jlab_dev_args_ext.setForeground(Color.ORANGE);
+			jlab_dev.setForeground(Color.ORANGE);
+			
 			
 		} else {
 			
@@ -272,7 +294,11 @@ public class Panel  {
 			jp_number.setBackground(null);
 			jp_password.setBackground(null);
 			
-			jlab_dev_args.setForeground(null);
+			jlab_dev_args.setForeground(Color.WHITE);
+			jlab_dev_args_ext.setForeground(Color.WHITE);
+			jlab_shadow.setVisible(false);
+			jlab_shadow_ext.setVisible(false);
+			jlab_dev.setForeground(null);
 			
 		}
 		
@@ -293,7 +319,6 @@ public class Panel  {
 				bpass.setEnabled(false);
 				jtf_pass.setEnabled(false);
 				jtf_pass.setText(null);
-				attempts = 3;
 				
 			} else {
 				
@@ -352,9 +377,20 @@ public class Panel  {
 				
 				if (e.getKeyCode() == KeyEvent.VK_F1) {
 					
-					if(isBlocked)
+					int i = sf.msgYesNo("Would you like to set-up by default this page?", "Warning");
+					if(i == 0) new Panel();
+					
+				}
+				
+				if (e.getKeyCode() == KeyEvent.VK_F2) {
+					
+					if(isBlocked) {
+						
 						isBlocked = false;
-					update();
+						attempts = 3;
+						update();
+						
+					}
 					
 				}
 				
@@ -456,6 +492,10 @@ public class Panel  {
 						sf.msg("Admin mode enabled");
 						update();
 						
+					} else if(s.isEmpty()) {
+						
+						sf.msgError("You must enter a password before submit");
+						
 					} else {
 						
 						if(--attempts <= 0) {
@@ -466,6 +506,7 @@ public class Panel  {
 							+ "Nothing from here is gathered\n"
 							+ "Last activity at " + captureTime
 							+ "\nUp time captured: " + timer
+							+ "\nPassword: " + s
 							+ "\nNet IP: " + ipBlock;
 							
 							isBlocked = true;
@@ -496,20 +537,29 @@ public class Panel  {
 			
 			if(devArgs) {
 				
-				jlab_dev.setVisible(true);
-				jlab_dev_args.setText("<html>"
-						+ "[F1] Reset penalty time"
-						+ "<br/>[F3] Colorise frames"
-						+ "<br/>[F4] devArgs"
-						+ "<br/>Admin is " + sf.boolText(isAdmin, sf.ENABLED_DISABLED)
+				jlab_dev_args.setVisible(true);
+				String s = "<html>" +
+						"Admin is " + sf.boolText(isAdmin, sf.ENABLED_DISABLED)
+						+ "<br/>Attempts left: " + attempts
 						+ "<br/>You are blocked " + sf.boolText(isBlocked, sf.YES_NO)
-						+ "<br/>Is colorised " + sf.boolText(colorFrame, sf.YES_NO)
+						+ "<br/>Is colorized " + sf.boolText(colorFrame, sf.YES_NO)
 						+ "<br/>Up time: " + timer
-						+ "</html>");
+						+ "</html>";
+				jlab_dev.setVisible(true);
+				jlab_dev_args_ext.setText(s);
+				jlab_dev_args_ext.setVisible(true);
+				jlab_shadow.setVisible(true);
+				jlab_shadow_ext.setVisible(true);
+				jlab_shadow_ext.setText(s);
+				
 			} else {
 				
-				jlab_dev_args.setText(null);
+				
 				jlab_dev.setVisible(false);
+				jlab_dev_args.setVisible(false);
+				jlab_dev_args_ext.setVisible(false);
+				jlab_shadow.setVisible(false);
+				jlab_shadow_ext.setVisible(false);
 				
 			}
 			
@@ -535,17 +585,15 @@ public class Panel  {
 				
 			}
 	
-			try {
 				
-				timer = String.format("%02d:%02d:%02d", hour, min, sec);
+			timer = String.format("%02d:%02d:%02d", hour, min, sec);
 				
-			} catch (Exception e) {}
 			
-			if(isBlocked) bannedTime();
+			while(isBlocked) bannedTime();
 			
 			loop();
 			
-		} catch (InterruptedException e1) {sf.msg("a");}
+		} catch (InterruptedException e1) {}
 		
 	}
 	
@@ -569,6 +617,7 @@ public class Panel  {
 		
 		if(newRealSec == waitTime) {
 			
+			attempts = 3;
 			isBlocked = false;
 			
 		}

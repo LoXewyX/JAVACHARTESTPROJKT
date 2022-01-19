@@ -53,6 +53,8 @@ public class Simplify {
 	
 	public int YES_NO = 0;
 	public int ENABLED_DISABLED = 1;
+	public int BIN = 1;
+	public int CHECK = 1;
 	
 	public String boolText(boolean bool, int i) {
 		
@@ -64,6 +66,12 @@ public class Simplify {
 		case 1:
 			if(bool) return "enabled";
 			return "disabled";
+		case 2:
+			if(bool) return "0";
+			return "1";
+		case 3:
+			if(bool) return "successed";
+			return "error";
 		
 		}
 		
@@ -100,6 +108,13 @@ public class Simplify {
 		return JOptionPane.showOptionDialog(null, o, String.valueOf(title),
 		        JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
 		        null, options, options[0]);
+		
+	}
+	
+	public int msgYesNo(Object o, Object title) {
+		
+		return JOptionPane.showConfirmDialog(null, o, String.valueOf(title),
+				JOptionPane.YES_NO_OPTION);
 		
 	}
 	
