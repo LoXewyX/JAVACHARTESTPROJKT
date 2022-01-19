@@ -3,6 +3,7 @@ package use;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,6 +48,26 @@ public class Simplify {
         		System.in.read();
             
         } catch (IOException e) {}
+		
+	}
+	
+	public int YES_NO = 0;
+	public int ENABLED_DISABLED = 1;
+	
+	public String boolText(boolean bool, int i) {
+		
+		switch(i) {
+		
+		case 0:
+			if(bool) return "YES";
+			return "NO";
+		case 1:
+			if(bool) return "enabled";
+			return "disabled";
+		
+		}
+		
+		return null;
 		
 	}
 	
@@ -104,12 +125,8 @@ public class Simplify {
 		
 	}
 	
-	public String desktopRoute() {
-		
-		File desk = FileSystemView.getFileSystemView().getHomeDirectory();
-		return desk.getAbsolutePath();
-		
-	}
+	
+	// For files
 	
 	public void createFolder(String route, String folderName) {
 		
@@ -118,9 +135,9 @@ public class Simplify {
 		
 	}
 	
-	public void createTXT(String route, String name, String write) {
+	public void createFile(String route, String name, String ext, String write) {
 		
-		String file = route + "\\" + name +".txt";
+		String file = route + "\\" + name + ext;
 		try {
 			new File(file);
 		    FileWriter myWriter = new FileWriter(file);
@@ -130,23 +147,60 @@ public class Simplify {
 		
 	}
 	
-	public String getTime() {
+	public String readFile(String route, String ext) {
 		
-		return new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
+		try {
+			
+			try (BufferedReader br = new BufferedReader(new FileReader(route + ext))) {
+				StringBuilder sb = new StringBuilder();
+				String line = br.readLine();
+
+				while (line != null) {
+				    sb.append(line);
+				    sb.append(System.lineSeparator());
+				    line = br.readLine();
+				}
+				
+				return sb.toString();
+			}
+		    
+		} catch(Exception e) {}
+		
+		return null;
 		
 	}
 	
-	public void openFile(String route) {
+	public void openFile(String route, String ext) {
 		
 		try {  
 			
-			File file = new File(route);    
+			File file = new File(route + ext);    
 			Desktop desktop = Desktop.getDesktop();  
 			if(file.exists())
 				desktop.open(file);
 		}  
 		
 		catch(Exception e) {}  
+		
+	}
+	
+	public String desktopRoute() {
+		
+		File desk = FileSystemView.getFileSystemView().getHomeDirectory();
+		return desk.getAbsolutePath();
+		
+	}
+	
+	public String projectLocation() {
+		
+		File file = new File("");
+		return file.getAbsolutePath();
+		
+	}
+	
+	public String getTimeByPattern(String pattern) {
+		
+		return new SimpleDateFormat(pattern).format(Calendar.getInstance().getTime());
 		
 	}
 	
