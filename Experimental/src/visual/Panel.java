@@ -1,5 +1,6 @@
 package visual;
 
+import use.GeneratedFile;
 import use.List;
 import use.Menu;
 import use.Simplify;
@@ -12,21 +13,25 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.concurrent.TimeUnit;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+
+import java.util.Arrays;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.JPasswordField;
 
-
-public class Panel  {
+public class Panel {
 	
 	public static int num;
 	public int page = 0, pagemax = 1;
@@ -37,26 +42,34 @@ public class Panel  {
 	private String[] txt = new String[List.txt.length];
 	private final String password = "admin";
 	private String currentVersion;
-	private final String creator = "LoXewyX";
-	private final int waitTime = 120;
+	private final String creator = "LoXewyX", pswrd[] = new String[3];
 	@SuppressWarnings("unused") private int realSec = 0;
-	private int attempts = 3,
-		min,
-		sec,
-		newsec,
-		hour,
-		newRealSec = 0,
-		oldSec = 0,
-		newoldSec;
-	private String timer,
-		reg,
-		revtimer,
-		captureTime;
-    private long timeFlow = System.currentTimeMillis();
+	private final int waitTime = 5;
+	private int FILE_KEY = KeyEvent.VK_F1,
+		UNLOCK_KEY = KeyEvent.VK_F2,
+		COLOR_KEY = KeyEvent.VK_F3,
+		DEV_KEY = KeyEvent.VK_F4,
+		LEFT_KEY = KeyEvent.VK_LEFT,
+		RIGHT_KEY = KeyEvent.VK_RIGHT,
+		ESCAPE_KEY = KeyEvent.VK_ESCAPE,
+		attempts = 3,
+		min, m,
+		sec, s = waitTime,
+		hour;
+	private long ms =  System.currentTimeMillis();
+	private String timer = String.format("%02d:%02d:%02d", hour, min, sec),
+		captureTime,
+		dir = sf.getTempDir();
 	private boolean isAdmin = false,
-			devArgs = false,
-			colorFrame = false,
-			isBlocked = false;
+		devArgs = false,
+		colorFrame = false,
+		isBlocked = false,
+		isPswrdHidden = true,
+		//in dev for 1.2.4
+		left = false,
+	   	up = false,
+	    down = false,
+	    right = false;
 	
 	private JFrame jf = new JFrame();
 	private JPanel jp_text = new JPanel(),
@@ -68,29 +81,20 @@ public class Panel  {
 	private JButton[] button = new JButton[List.txt.length];
 	private JButton buttonBack,
 		buttonNext,
-		bpass;
+		bpass,
+		bshow;
 	private JLabel jlab_title = new JLabel(),
 		jlab_page = new JLabel("Page " + String.valueOf(page) + " / " + pagemax),
-		jlab_dev_args = new JLabel("<html>"
-				+ "[F1] Reset to default"
-				+ "<br/>[F2] Reset penalty time"
-				+ "<br/>[F3] Colorise frames"
-				+ "<br/>[F4] Developer arguments"
-				+ "</html>"),
+		jlab_dev_args = new JLabel(),
 		jlab_dev_args_ext = new JLabel(), 
-		jlab_dev = new JLabel("<html>by " + creator + "<br/>2022 - "+ sf.getTimeByPattern("YYYY") + "</html>"),
-		jlab_shadow = new JLabel("<html>"
-				+ "[F1] Reset to default"
-				+ "<br/>[F2] Reset penalty time"
-				+ "<br/>[F3] Colorise frames"
-				+ "<br/>[F4] Developer arguments"
-				+ "</html>"),
+		jlab_dev = new JLabel("<html>by " + creator + "<br/>2022 - "+ sf.getYear() + "</html>"),
+		jlab_shadow = new JLabel(),
 		jlab_shadow_ext = new JLabel();
-	private JTextField jtf_pass = new JTextField(null, 18);
+	private JPasswordField jtf_pass = new JPasswordField(null, 24);
 	
-	public void start() {
+	public void load() {
 		
-		currentVersion = "v" + sf.readFile(sf.projectLocation() + "\\src\\files\\version", "");
+		currentVersion = "v" + sf.readFile(sf.getProjectLocation() + "\\src\\files\\version");
 		
 		jf.addKeyListener(keyListen());
 		jtf_pass.addActionListener(checkPassword());
@@ -100,6 +104,7 @@ public class Panel  {
 		// Frame load
 		
 	    jf.setTitle("Experimental " + currentVersion);
+	    
 	    jf.setSize(750, 500);
 	    jf.addComponentListener(new ComponentAdapter() {
             @Override
@@ -108,7 +113,19 @@ public class Panel  {
             }
 
         });
-	    jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    jf.addWindowListener(new WindowListener() { 
+	        @Override public void windowOpened(WindowEvent e) {} 
+	        @Override public void windowClosing(WindowEvent e) {
+	        	
+	        	sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Interference.wav");
+	    		sf.deleteFile(dir + "\\logs\\");
+	        } 
+	        @Override public void windowClosed(WindowEvent e) {} 
+	        @Override public void windowIconified(WindowEvent e) {} 
+	        @Override public void windowDeiconified(WindowEvent e) {} 
+	        @Override public void windowActivated(WindowEvent e) {} 
+	        @Override public void windowDeactivated(WindowEvent e) {} 
+	    }); 
 	    jf.setIconImage(
 	    		Toolkit.getDefaultToolkit().
 	    		getImage(Panel.class.getResource("/img/favicon.png"))
@@ -132,9 +149,7 @@ public class Panel  {
 		
 		jp_buttons.setBounds(50, 100, 625, 300);
 		
-		bMenu();
-		
-		bNext();
+		bMenu(); bNext();
 		
 		jp_nxt.setBounds(0, 410, 750, 100);
 		jp_nxt.setVisible(true);
@@ -147,26 +162,40 @@ public class Panel  {
 		jp_nxt.add(buttonNext);
 		
 		jtf_pass.setSize(50, 0);
+		jtf_pass.setEchoChar('\u25CF');
 		jtf_pass.setVisible(true);
+		jtf_pass.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				
+				sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Select.wav");
+				
+			}
+			@Override
+			public void focusLost(FocusEvent e) {}
+	        
+	    });
+		bshow.setVisible(true);
+		bshow.setFocusable(false);
 		bpass.setVisible(true);
 		bpass.setFocusable(false);
 		
 		jp_password.setBounds(0, 400, 250, 60);
 		jp_password.setVisible(false);
 		jp_password.add(jtf_pass);
+		jp_password.add(bshow);
 		jp_password.add(bpass);
-		
-		jlab_dev_args.setBounds(10, 10, 150, 75);
-		
-		jlab_dev_args_ext.setBounds(600, 10, 150, 75);
 		
 		jlab_dev.setBounds(650, 390, 150, 75);
 		
-		jlab_shadow.setBounds(11, 11, 150, 75);
-		jlab_shadow.setForeground(null);
+		jlab_dev_args.setBounds(5, 5, 150, 90);
+		jlab_shadow.setBounds(6, 6, 150, 90);
+		jlab_shadow.setForeground(Color.GREEN);
 		
-		jlab_shadow_ext.setBounds(601, 11, 150, 75);
-		jlab_shadow_ext.setForeground(null);
+		jlab_dev_args_ext.setBounds(500, 5, 250, 100);
+		jlab_shadow_ext.setBounds(501, 6, 250, 100);
+		jlab_shadow_ext.setForeground(Color.GREEN);
 		
 		jlpane.add(jp_text);
 		jlpane.add(jp_buttons);
@@ -179,10 +208,7 @@ public class Panel  {
 		jlpane.add(jlab_shadow, 2, 0);
 		jlpane.add(jlab_shadow_ext, 2, 0);
 			
-		pageUpdate();
-		loop();
-			
-		
+		timeStart();
 		
 	}
 
@@ -221,6 +247,7 @@ public class Panel  {
 			button[i].addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent e) {
 					
+					sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Confirm.wav");
 					num = Integer.parseInt(e.getActionCommand());
 					testWindow(num);
 					
@@ -236,6 +263,12 @@ public class Panel  {
 		jb.setBackground(Color.WHITE);
 		jb.setForeground(Color.darkGray);
 		jb.setFocusable(false);
+		jb.addMouseListener(new java.awt.event.MouseAdapter() {
+		    public void mouseEntered(java.awt.event.MouseEvent evt) {
+		    	if(jb.isEnabled())
+		    		sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Select.wav");
+		    }
+		});
 		
 	}
 	
@@ -246,6 +279,7 @@ public class Panel  {
 		buttonBack.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				
+		    	sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Confirm.wav");
 				page -= 1;
 				pageUpdate();
 				
@@ -257,6 +291,7 @@ public class Panel  {
 		buttonNext.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				
+				sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Confirm.wav");
 				page += 1;
 				pageUpdate();
 				
@@ -267,68 +302,9 @@ public class Panel  {
 		buttonProps(bpass);
 		bpass.addActionListener(checkPassword());
 		
-	}
-	
-	private void update() {
-		
-		if(colorFrame) {
-			
-			jf.getContentPane().setBackground(Color.darkGray);
-			jp_text.setBackground(Color.RED);
-			jp_buttons.setBackground(Color.GREEN);
-			jp_nxt.setBackground(Color.BLUE);
-			jp_number.setBackground(Color.ORANGE);
-			jp_password.setBackground(Color.ORANGE);
-			
-			jlab_dev_args.setForeground(Color.ORANGE);
-			jlab_dev_args_ext.setForeground(Color.ORANGE);
-			jlab_dev.setForeground(Color.ORANGE);
-			
-			
-		} else {
-			
-			jf.getContentPane().setBackground(null);
-			jp_text.setBackground(null);
-			jp_buttons.setBackground(null);
-			jp_nxt.setBackground(null);
-			jp_number.setBackground(null);
-			jp_password.setBackground(null);
-			
-			jlab_dev_args.setForeground(Color.WHITE);
-			jlab_dev_args_ext.setForeground(Color.WHITE);
-			jlab_shadow.setVisible(false);
-			jlab_shadow_ext.setVisible(false);
-			jlab_dev.setForeground(null);
-			
-		}
-		
-		if(isAdmin) {
-			
-			bpass.setText("Exit");
-			jtf_pass.setEnabled(false);
-			jtf_pass.setText(null);
-			reg = null;
-			attempts = 3;
-			
-		}
-		
-		else {
-			
-			if(isBlocked) {
-				
-				bpass.setEnabled(false);
-				jtf_pass.setEnabled(false);
-				jtf_pass.setText(null);
-				
-			} else {
-				
-				bpass.setText("Check");
-				jtf_pass.setEnabled(true);
-				bpass.setEnabled(true);
-				
-			}
-			
-		}
+		bshow = new JButton("Reveal");
+		buttonProps(bshow);
+		bshow.addActionListener(passwordReveal());
 		
 	}
 	
@@ -360,6 +336,123 @@ public class Panel  {
 			
 			jp_buttons.setVisible(false);
 			jlab_title.setText("Other example");
+			jf.addKeyListener(new KeyListener() {
+	            @Override
+	            public void keyTyped(KeyEvent e) {}
+	            @Override
+	            public void keyReleased(KeyEvent e) {
+	                
+	            }
+	            @Override
+	            public void keyPressed(KeyEvent e) {
+	                if (e.getKeyCode() == KeyEvent.VK_LEFT) left = true;
+	                if (e.getKeyCode() == KeyEvent.VK_RIGHT) right = true;
+	                if (e.getKeyCode() == KeyEvent.VK_UP) up = true;
+	                if (e.getKeyCode() == KeyEvent.VK_DOWN) down = true;
+	            }
+	        });
+			
+		}
+		
+		if(colorFrame && devArgs) {
+			
+			jf.getContentPane().setBackground(Color.darkGray);
+			jp_text.setBackground(Color.RED);
+			jp_buttons.setBackground(Color.GREEN);
+			jp_nxt.setBackground(Color.BLUE);
+			jp_number.setBackground(Color.ORANGE);
+			jp_password.setBackground(Color.ORANGE);
+			
+			jlab_dev_args.setForeground(Color.ORANGE);
+			jlab_dev_args_ext.setForeground(Color.ORANGE);
+			jlab_shadow.setForeground(null);
+			jlab_shadow_ext.setForeground(null);
+			jlab_dev.setForeground(Color.ORANGE);
+			
+		} else {
+			
+			jf.getContentPane().setBackground(null);
+			jp_text.setBackground(null);
+			jp_buttons.setBackground(null);
+			jp_nxt.setBackground(null);
+			jp_number.setBackground(null);
+			jp_password.setBackground(null);
+			
+			jlab_dev_args.setForeground(Color.GREEN);
+			jlab_dev_args_ext.setForeground(Color.GREEN);
+			jlab_shadow.setForeground(null);
+			jlab_shadow_ext.setForeground(null);
+			jlab_dev.setForeground(null);
+			
+		}
+		
+		if(isAdmin && devArgs) {
+			
+			bpass.setText("Exit");
+			jtf_pass.setEnabled(false);
+			jtf_pass.setText(null);
+			bshow.setVisible(false);
+			attempts = 3;
+			
+		} else {
+			
+			bshow.setVisible(true);
+			if(isBlocked) {
+				
+				bpass.setEnabled(false);
+				bshow.setEnabled(false);
+				jtf_pass.setEnabled(false);
+				jtf_pass.setText(null);
+				
+			} else {
+				
+				bpass.setText("Check");
+				jtf_pass.setEnabled(true);
+				bshow.setEnabled(true);
+				bpass.setEnabled(true);
+				
+			}
+			
+		}
+		
+		String s = 	"<html>"
+				+ "[ESC] To exit the program"
+				+ "<br/>[F1] Select save folder"
+				+ "<br/>[F2] Reset penalty time"
+				+ "<br/>[F3] Colorise frames"
+				+ "<br/>[F4] Developer arguments"
+				+ "<br/>[Ctrl] + [KEY] + [NEW_KEY]"
+				+ "</html>",
+				sExt = "<html>"
+				+ "Up time: " + timer
+				+ "<br/>Admin is " + sf.boolText(isAdmin, sf.ENABLED_DISABLED)
+				+ "<br/>Attempts left: " + attempts
+				+ "<br/>You are blocked " + sf.boolText(isBlocked, sf.YES_NO)
+				+ "<br/>Is colorized " + sf.boolText(colorFrame, sf.YES_NO)
+				+ "<br/>Current save folder:"
+				+ "<br/>" + dir
+				+ "</html>";
+		
+		if(devArgs) {
+			
+			jlab_dev_args.setVisible(true);
+			
+			jlab_dev.setVisible(true);
+			jlab_dev_args.setText(s);
+			jlab_dev_args_ext.setText(sExt);
+			jlab_dev_args_ext.setVisible(true);
+			jlab_shadow.setText(s);
+			jlab_shadow_ext.setText(sExt);
+			jlab_shadow_ext.setVisible(true);
+			jlab_shadow.setVisible(true);
+			
+		} else {
+			
+			jlab_dev.setVisible(false);
+			jlab_dev_args.setVisible(false);
+			jlab_dev_args_ext.setVisible(false);
+			jlab_shadow.setVisible(false);
+			jlab_shadow_ext.setVisible(false);
 			
 		}
 		
@@ -374,71 +467,87 @@ public class Panel  {
 
 			@Override
 			public void keyPressed(KeyEvent e) {
-				
-				if (e.getKeyCode() == KeyEvent.VK_F1) {
+									
+				if (e.getKeyCode() == FILE_KEY && devArgs) {
 					
-					int i = sf.msgYesNo("Would you like to set-up by default this page?", "Warning");
-					if(i == 0) new Panel();
+					String oldDir = dir;
+					dir = sf.selectFolder(dir);
+					if(oldDir != dir)
+						sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Enable.wav");
 					
 				}
 				
-				if (e.getKeyCode() == KeyEvent.VK_F2) {
+				if (e.getKeyCode() == UNLOCK_KEY && devArgs) {
 					
 					if(isBlocked) {
 						
+						sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Enable.wav");
 						isBlocked = false;
-						attempts = 3;
-						update();
+						pageUpdate();
 						
 					}
 					
+					attempts = 3;
+					
 				}
 				
-				if (e.getKeyCode() == KeyEvent.VK_F3) {
+				if (e.getKeyCode() == COLOR_KEY && devArgs) {
 					
 					if(colorFrame)
 						colorFrame = false;
 						
-					else
+					else {
+						
 						colorFrame = true;
+						sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Enable.wav");
+						
+					}
+						
 
-					update();
+					pageUpdate();
 					
 				}
 				
-				if (e.getKeyCode() == KeyEvent.VK_F4) {
+				if (e.getKeyCode() == DEV_KEY) {
 					
 					if(devArgs) {
 						
 						devArgs = false;
 						jp_password.setVisible(false);
+						
 					} else {
 						
+						sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Enable.wav");
 						devArgs = true;
 						jp_password.setVisible(true);
 						
 					}
-						
 					
-					
+					pageUpdate();
 				}
 				
-				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+				if (e.getKeyCode() == LEFT_KEY) {
 					
 					page -= 1;
 					pageUpdate();
 					
 				}
 				
-				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+				if (e.getKeyCode() == RIGHT_KEY) {
 					
 					page += 1;
 					pageUpdate();
 					
 				}
 				
-				if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+				if (e.getKeyCode() == ESCAPE_KEY) {
 					
+						try {
+							sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Interference.wav");
+							jf.setVisible(false);
+							Thread.sleep(1000);
+						} catch (InterruptedException ex) {}
+						
 					System.exit(0);
 					
 				}
@@ -446,7 +555,18 @@ public class Panel  {
 			}
 
 			@Override
-			public void keyReleased(KeyEvent e) {}
+			public void keyReleased(KeyEvent e) {
+				
+				if(page == 1) {
+					
+					if (e.getKeyCode() == KeyEvent.VK_LEFT) 	left = false;
+	                if (e.getKeyCode() == KeyEvent.VK_RIGHT) 	right = false;
+	                if (e.getKeyCode() == KeyEvent.VK_UP) 		up = false;
+	                if (e.getKeyCode() == KeyEvent.VK_DOWN) 	down = false;
+					
+				}
+				
+			}
 		};
 	
 	}
@@ -461,171 +581,154 @@ public class Panel  {
 				jf.requestFocus();
 				
 			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {}
-
-			@Override
-			public void mouseExited(MouseEvent e) {}
+			@Override public void mousePressed(MouseEvent e) {}
+			@Override public void mouseReleased(MouseEvent e) {}
+			@Override public void mouseEntered(MouseEvent e) {}
+			@Override public void mouseExited(MouseEvent e) {}
 
         };
 		
 	}
 	
+	// Start with password diagnose
 	private ActionListener checkPassword() {
 		
 		return new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				
-				String s = jtf_pass.getText();
-				if(isAdmin) isAdmin = false;
+				String s = String.valueOf(jtf_pass.getPassword());
+				if(isAdmin) {
+					
+					sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Select-Drop.wav");
+					isAdmin = false;
+					
+				}
 				else {
 					if(s.equals(password)) {
 						
 						isAdmin = true;
+						sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Get.wav");
 						sf.msg("Admin mode enabled");
-						update();
+						pageUpdate();
 						
-					} else if(s.isEmpty()) {
+					} else if(s.isBlank()) {
 						
+						sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Error.wav");
 						sf.msgError("You must enter a password before submit");
 						
 					} else {
 						
-						if(--attempts <= 0) {
+						if(attempts <= 0 && !pswrd[0].equals(s)) {
 							
-							ipBlock = sf.getUserIP();
-							captureTime = sf.getTimeByPattern("HH:mm:ss");
-							reg = "Don\'t panic this is only a test\n"
-							+ "Nothing from here is gathered\n"
-							+ "Last activity at " + captureTime
-							+ "\nUp time captured: " + timer
-							+ "\nPassword: " + s
-							+ "\nNet IP: " + ipBlock;
-							
+							sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Alert.wav");
 							isBlocked = true;
-							String ext = "txt", projLoc = sf.projectLocation() + "\\src",
-								fileName = "log";
-							sf.print(projLoc + "\\logs");
-							sf.createFolder(projLoc, "logs");
-							sf.createFile(projLoc + "\\logs", fileName + ".", ext, reg);
-							sf.openFile(projLoc + "\\logs\\" + fileName + ".", ext);
+							ipBlock = sf.getNetworkIP();
+							captureTime = sf.getTimeByPattern("HH:mm:ss");
+							new GeneratedFile(ipBlock, dir, captureTime, timer, pswrd);
+							Arrays.fill(pswrd, null);
+							
+						} else {
+							
+							try {
+								
+								if(pswrd[attempts].equals(s)) {
+									
+									sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Error.wav");
+									sf.msgError("You had written this password before. Try another new one");
+									
+								} else {
+									sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Error.wav");
+									sf.msgError("Password does not match! You have " +
+											attempts-- + " attempts left");
+									pswrd[attempts] = s;
+									
+								}
+								
+							} catch(Exception ex) {
+								
+								sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Error.wav");
+								sf.msgError("Password does not match! You have " +
+										attempts + " attempts left");
+								pswrd[--attempts] = s;
+								
+							};
 							
 						}
-						else
-							sf.msgError("Password does not match! You have " +
-									attempts + " attempts left");
-						
+//						sf.println(sf.printArray(pswrd));
 					}
 					
 				}
-				update();
+				
+				pageUpdate();
+				
 			}
 		};
 		
 	}
 	
-	private void loop() throws StackOverflowError {
+	private ActionListener passwordReveal() {
 		
-		try {
-			
-			if(devArgs) {
+		return new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
 				
-				jlab_dev_args.setVisible(true);
-				String s = "<html>" +
-						"Admin is " + sf.boolText(isAdmin, sf.ENABLED_DISABLED)
-						+ "<br/>Attempts left: " + attempts
-						+ "<br/>You are blocked " + sf.boolText(isBlocked, sf.YES_NO)
-						+ "<br/>Is colorized " + sf.boolText(colorFrame, sf.YES_NO)
-						+ "<br/>Up time: " + timer
-						+ "</html>";
-				jlab_dev.setVisible(true);
-				jlab_dev_args_ext.setText(s);
-				jlab_dev_args_ext.setVisible(true);
-				jlab_shadow.setVisible(true);
-				jlab_shadow_ext.setVisible(true);
-				jlab_shadow_ext.setText(s);
+				sf.addSound(sf.getProjectLocation() + "\\src\\sounds\\Confirm.wav");
 				
-			} else {
+				if(isPswrdHidden) {
+					
+					jtf_pass.setEchoChar('\u0000');
+					isPswrdHidden = false;
+					
+				} else {
+					
+					jtf_pass.setEchoChar('\u25CF');
+					isPswrdHidden = true;
+					
+				}
 				
-				
-				jlab_dev.setVisible(false);
-				jlab_dev_args.setVisible(false);
-				jlab_dev_args_ext.setVisible(false);
-				jlab_shadow.setVisible(false);
-				jlab_shadow_ext.setVisible(false);
+				if(isPswrdHidden)  bshow.setText("Reveal");
+				else bshow.setText("Hide");
 				
 			}
-			
-			TimeUnit.MILLISECONDS.sleep(100);
 				
-			
-			sec = (int)((System.currentTimeMillis() - timeFlow) / 1000);
-			if(oldSec != sec) realSec++;
-			oldSec = sec;
-			
-			if (sec == 60) {
-				
-				if(sec % 60 == 0) min++;
-			    sec = 0;
-			    timeFlow = System.currentTimeMillis();
-			    
-			}
-			
-			if(min == 60) {
-				
-				if(min % 60 == 0) hour++;
-				sec = 0;
-				
-			}
-	
-				
-			timer = String.format("%02d:%02d:%02d", hour, min, sec);
-				
-			
-			while(isBlocked) bannedTime();
-			
-			loop();
-			
-		} catch (InterruptedException e1) {}
+		};
 		
 	}
 	
-	private void bannedTime() {
-		
-		newsec = (int)((System.currentTimeMillis() - timeFlow) / 1000);
-		if (newoldSec != newsec) newRealSec++;
-		newoldSec = newsec;
-		
-		int m = 0, s;
-		s = waitTime - newRealSec;
-		if (s >= 60) {
+	private void timeStart() {
+
+		// Spaghetti but functional
+		if(ms > 1000) sec++;
+		if(sec >= 60){
+			min++;
+			sec = 0;
+			if(min >= 60){
+				hour++;
+				min = 0;
+			}
+		}
+		try { Thread.sleep(1000); }
+		catch (InterruptedException e) {}
+		pageUpdate();
+		timer = String.format("%02d:%02d:%02d", hour, min, sec);
+		if(isBlocked) {
 			
-			m += s / 60;
-			s %= 60;
+			if(ms > 1000) s--;
+			if (s >= 60) {
+				m += s / 60;
+				s %= 60;
+			}
+			bpass.setText(String.format("%02d:%02d\n",  m, s));
+			
+			if(s <= 0) {
+				
+				s = waitTime;
+				attempts = 3;
+				isBlocked = false;
+				
+			}
 			
 		}
-		
-		revtimer = String.format("%02d:%02d\n",  m, s);
-		bpass.setText(revtimer);
-		
-		if(newRealSec == waitTime) {
-			
-			attempts = 3;
-			isBlocked = false;
-			
-		}
-		
-		update();
-		
-		
-		
+		timeStart();
 	}
 	
 }
